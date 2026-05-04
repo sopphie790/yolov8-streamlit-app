@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # =========================
-# 🔥 CONTROL ROOM UI PRO (UPGRADE ONLY)
+# UI DESIGN FIXED
 # =========================
 st.markdown("""
 <style>
@@ -25,56 +25,23 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* ================= SIDEBAR CONTROL ROOM ================= */
+/* SIDEBAR */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
-        rgba(10, 10, 10, 0.95),
-        rgba(20, 20, 20, 0.90)
+        rgba(255, 77, 166, 0.65),
+        rgba(255, 26, 117, 0.65)
     );
     backdrop-filter: blur(14px);
-    border-right: 1px solid rgba(255, 77, 166, 0.3);
 }
 
-/* Sidebar text glow */
+/* SIDEBAR TEXT */
 [data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 600;
 }
 
-/* Sidebar header glow */
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
-    color: #ff4da6 !important;
-    text-shadow: 0 0 8px rgba(255, 77, 166, 0.4);
-}
-
-/* ================= SELECT BOX (FIX ARROW + PRO LOOK) ================= */
-[data-testid="stSelectbox"] > div {
-    background: rgba(255, 255, 255, 0.06);
-    border: 2px solid rgba(255, 77, 166, 0.8);
-    border-radius: 12px;
-    padding: 6px;
-}
-
-[data-testid="stSelectbox"] * {
-    color: white !important;
-    font-weight: 600;
-}
-
-/* FORCE ARROW VISIBILITY */
-[data-testid="stSelectbox"] svg {
-    fill: white !important;
-    opacity: 1 !important;
-}
-
-/* Hover glow */
-[data-testid="stSelectbox"]:hover {
-    box-shadow: 0 0 15px rgba(255, 77, 166, 0.6);
-}
-
-/* ================= BUTTON ================= */
+/* BUTTON */
 .stButton>button {
     background: linear-gradient(90deg, #ff4da6, #ff1a75);
     color: white;
@@ -83,16 +50,13 @@ st.markdown("""
     padding: 0.6em 1em;
     font-weight: bold;
     width: 100%;
-    transition: 0.2s;
 }
 
 .stButton>button:hover {
     color: black !important;
     transform: scale(1.03);
-    box-shadow: 0 0 12px rgba(255, 77, 166, 0.4);
 }
 
-/* TITLES */
 h1, h2, h3 {
     color: white;
 }
@@ -168,7 +132,7 @@ def detect(frame):
     return annotated, total_count, classes, alert, class_count
 
 # =========================
-# ANALYTICS DASHBOARD
+# 🔥 AI ANALYTICS DASHBOARD
 # =========================
 def render_analytics(class_count):
     if not class_count:
@@ -201,13 +165,13 @@ def render_analytics(class_count):
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.header("⚙️ CONTROL ROOM")
+    st.header("⚙️ Control Panel")
 
     mode = st.selectbox("Select Mode", ["Live Camera", "Upload Image"])
 
     st.markdown("---")
 
-    st.subheader("🚨 AI ALERTS")
+    st.subheader("🚨 AI Alerts")
 
     if st.session_state.alerts:
         for a in reversed(st.session_state.alerts[-5:]):
