@@ -165,46 +165,24 @@ def render_analytics(class_count):
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.header("⚙️ CONTROL ROOM PANEL")
+    st.header("⚙️ Control Panel")
 
     mode = st.selectbox("Select Mode", ["Live Camera", "Upload Image"])
 
     st.markdown("---")
 
-    st.subheader("🚨 AI ALERTS")
+    st.subheader("🚨 AI Alerts")
 
     if st.session_state.alerts:
         for a in reversed(st.session_state.alerts[-5:]):
             st.error(f"{a['time']} - {a['message']}")
     else:
         st.info("No alerts yet")
+        st.markdown("---")
+        st.markdown("### 👩‍💻 Developer")
+        st.markdown("**Liza S. Jaime**")
+        st.markdown("BSCS - 3A")
 
-    # =========================
-    # 👩‍💻 DEVELOPER PRO CARD
-    # =========================
-    st.markdown("---")
-
-    st.markdown("""
-    <div style="
-        background: rgba(0,0,0,0.35);
-        border: 1px solid rgba(255, 77, 166, 0.5);
-        padding: 15px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 0 12px rgba(255, 77, 166, 0.25);
-    ">
-    """, unsafe_allow_html=True)
-
-    st.image("developer.jpg", width=110)
-
-    st.markdown("""
-    <div style="margin-top:10px;">
-        <h4 style="color:#ff4da6; margin-bottom:4px;">👩‍💻 Developer</h4>
-        <p style="color:white; margin:0;"><b>Liza S. Jaime</b></p>
-        <p style="color:#ccc; margin:0;">BSCS - 3A</p>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
 # =========================
 # MAIN APP
 # =========================
