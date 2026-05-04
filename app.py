@@ -140,8 +140,9 @@ def render_analytics(class_count):
 
     df = pd.DataFrame(list(class_count.items()), columns=["Object", "Count"])
 
-    st.subheader("📊 AI Analytics Dashboard")
+    st.subheader("📊 AI Analytics Dashboard (Pie Chart)")
 
+    # TOP OBJECT METRICS
     top = df.sort_values("Count", ascending=False).iloc[0]
 
     col1, col2 = st.columns(2)
@@ -152,12 +153,17 @@ def render_analytics(class_count):
     with col2:
         st.metric("Highest Count", int(top["Count"]))
 
+    # PIE CHART
     fig, ax = plt.subplots()
-    ax.bar(df["Object"], df["Count"])
-    ax.set_title("Detection Breakdown")
-    ax.set_xlabel("Objects")
-    ax.set_ylabel("Count")
-    plt.xticks(rotation=45)
+
+    ax.pie(
+        df["Count"],
+        labels=df["Object"],
+        autopct='%1.1f%%',
+        startangle=90
+    )
+
+    ax.set_title("Object Distribution")
 
     st.pyplot(fig)
 
@@ -182,23 +188,7 @@ with st.sidebar:
         st.markdown("### 👩‍💻 Developer")
         st.markdown("**Liza S. Jaime**")
         st.markdown("BSCS - 3A")
-# =========================
-# 🤖 AI ENGINE STATUS BADGE
-# =========================
-st.markdown("""
-<div style="
-    background: rgba(0, 255, 150, 0.08);
-    border: 1px solid rgba(0, 255, 150, 0.5);
-    padding: 10px;
-    border-radius: 10px;
-    text-align: center;
-    margin-bottom: 10px;
-">
-    <span style="color:#00ffae; font-weight:bold;">
-        🟢 AI Engine Running
-    </span>
-</div>
-""", unsafe_allow_html=True)
+
 # =========================
 # MAIN APP
 # =========================
