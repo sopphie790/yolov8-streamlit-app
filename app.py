@@ -1,27 +1,46 @@
-import cv2
-import numpy as np
-from PIL import Image
-from ultralytics import YOLO
 import streamlit as st
-
-st.set_page_config(page_title="YOLOv8 Detection", layout="wide")
+from streamlit_webrtc import webrtc_streamer
+from ultralytics import YOLO
+import av
 
 # =========================
-# Sidebar
+# PAGE CONFIG (PRO UI LOOK)
 # =========================
-st.sidebar.title("⚙️ Settings")
-mode = st.sidebar.selectbox(
-    "Choose Mode",
-    ["📷 Camera Capture", "🖼 Upload Image"]
+st.set_page_config(
+    page_title="AI Live Detection Dashboard",
+    page_icon="🎥",
+    layout="wide"
 )
 
-confidence = st.sidebar.slider("Confidence Threshold", 0.1, 1.0, 0.5)
+# =========================
+# SIDEBAR DASHBOARD
+# =========================
+st.sidebar.title("⚙️ Control Panel")
+st.sidebar.markdown("Configure your AI detection system")
+
+conf_threshold = st.sidebar.slider(
+    "Confidence Threshold",
+    0.0, 1.0, 0.5, 0.05
+)
+
+start_camera = st.sidebar.toggle("🎥 Start Camera", value=True)
 
 st.sidebar.markdown("---")
-st.sidebar.info("Developed using YOLOv8 + Streamlit")
+st.sidebar.info("YOLOv8 Live Detection System")
 
 # =========================
-# Load Model
+# MAIN HEADER
+# =========================
+st.title("🎥 AI Object Detection Dashboard")
+st.markdown("Real-time object detection using YOLOv8 + WebRTC")
+
+if start_camera:
+    st.success("🟢 Camera is running")
+else:
+    st.warning("🔴 Camera is stopped")
+
+# =========================
+# LOAD MODEL (CACHE)
 # =========================
 @st.cache_resource
 def load_model():
@@ -30,67 +49,34 @@ def load_model():
 model = load_model()
 
 # =========================
-# Title
+# VIDEO PROCESSING
 # =========================
-st.title("🚀 YOLOv8 Object Detection App")
-st.write("Detect objects using AI (Camera or Upload)")
+def video_frame_callback(frame):
+    img = frame.to_ndarray(format="bgr24")
 
-# =========================
-# CAMERA MODE
-# =========================
-if mode == "📷 Camera Capture":
-    img_file = st.camera_input("Take a picture")
+    results = model.track(
+        img,
+        persist=True,
+        conf=conf_threshold,
+        verbose=False
+    )
 
-    if img_file is not None:
-        image = Image.open(img_file)
-        img = np.array(image)
+    annotated = results[0].plot()
 
-        results = model(img, conf=confidence)
-        annotated = results[0].plot()
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.image(img, caption="Original", use_column_width=True)
-
-        with col2:
-            st.image(annotated, caption="Detected", use_column_width=True)
-
-        # Count objects
-        counts = {}
-        for cls in results[0].boxes.cls:
-            label = model.names[int(cls)]
-            counts[label] = counts.get(label, 0) + 1
-
-        st.subheader("📊 Object Count")
-        st.json(counts)
+    return av.VideoFrame.from_ndarray(annotated, format="bgr24")
 
 # =========================
-# UPLOAD MODE
+# LIVE STREAM (WEBRTC)
 # =========================
-elif mode == "🖼 Upload Image":
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        img = np.array(image)
-
-        results = model(img, conf=confidence)
-        annotated = results[0].plot()
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.image(img, caption="Original", use_column_width=True)
-
-        with col2:
-            st.image(annotated, caption="Detected", use_column_width=True)
-
-        # Count objects
-        counts = {}
-        for cls in results[0].boxes.cls:
-            label = model.names[int(cls)]
-            counts[label] = counts.get(label, 0) + 1
-
-        st.subheader("📊 Object Count")
-        st.json(counts)
+if start_camera:
+    webrtc_streamer(
+        key="pro-ai-dashboard",
+        video_frame_callback=video_frame_callback,
+        async_processing=True,
+        rtc_configuration={
+            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+        },
+        media_stream_constraints={"video": True, "audio": False},
+    )
+else:
+    st.info("Camera is turned off from sidebar")
