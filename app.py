@@ -17,10 +17,11 @@ st.set_page_config(
 # =========================
 @st.cache_resource
 def load_model():
-    model = YOLO("yolov8n.pt")
-    return model
+    from ultralytics import YOLO
 
-model = load_model()
+    # IMPORTANT: force re-download safe weights
+    model = YOLO("yolov8n.pt", task="detect")
+    return model
 
 # =========================
 # UI DESIGN
