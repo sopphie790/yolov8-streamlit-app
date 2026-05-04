@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # =========================
-# PROFESSIONAL UI (PINK SIDEBAR FIXED)
+# UI DESIGN (FIXED SIDEBAR + BUTTONS)
 # =========================
 st.markdown("""
 <style>
@@ -22,19 +22,24 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* FIXED SIDEBAR (TRANSPARENT + MODERN) */
+/* SIDEBAR TRANSPARENT PINK GLASS */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, rgba(255,77,166,0.95), rgba(255,26,117,0.95));
-    backdrop-filter: blur(12px);
+    background: linear-gradient(
+        180deg,
+        rgba(255, 77, 166, 0.75),
+        rgba(255, 26, 117, 0.75)
+    );
+    backdrop-filter: blur(14px);
 }
 
 /* SIDEBAR TEXT */
 [data-testid="stSidebar"] * {
-    color: white !important;
-    font-weight: 500;
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
 }
 
-/* BUTTON STYLE FIXED */
+/* BUTTON STYLE */
 .stButton>button {
     background: linear-gradient(90deg, #ff4da6, #ff1a75);
     color: white;
@@ -42,8 +47,8 @@ st.markdown("""
     border: none;
     padding: 0.6em 1em;
     font-weight: bold;
-    transition: 0.3s;
     width: 100%;
+    transition: 0.3s;
 }
 
 .stButton>button:hover {
@@ -51,7 +56,7 @@ st.markdown("""
     box-shadow: 0px 4px 20px rgba(255, 26, 117, 0.4);
 }
 
-/* TITLE STYLE */
+/* TITLE */
 h1, h2, h3 {
     color: white;
 }
@@ -59,21 +64,16 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =========================
-# SAFE MODEL LOADING (FIX FOR CLOUD ERRORS)
+# MODEL LOAD (SAFE)
 # =========================
 @st.cache_resource
 def load_model():
-    try:
-        model = YOLO("yolov8n.pt")
-        return model
-    except Exception as e:
-        st.error("Model loading failed. Check requirements.txt or Torch install.")
-        return None
+    return YOLO("yolov8n.pt")
 
 model = load_model()
 
 # =========================
-# TITLE (YOUR REQUEST)
+# TITLE (AS REQUESTED)
 # =========================
 st.title("🎥 Live Object Detection & Tracing")
 st.write("Point your camera at objects to identify them in real-time.")
@@ -82,9 +82,6 @@ st.write("Point your camera at objects to identify them in real-time.")
 # DETECTION FUNCTION
 # =========================
 def detect(frame):
-    if model is None:
-        return frame, 0
-
     results = model.predict(frame, conf=0.3, verbose=False)
 
     annotated = results[0].plot()
@@ -106,13 +103,14 @@ with st.sidebar:
 # =========================
 # MAIN APP
 # =========================
+
 if mode == "Live Camera":
     st.subheader("📷 Live Camera Detection")
 
     img_file = st.camera_input("Open Camera")
 
     if img_file:
-        image = Image.open(img_file)
+        image = Image.open(img_file).convert("RGB")  # FIXED
         image = np.array(image)
 
         processed, count = detect(image)
@@ -131,7 +129,7 @@ elif mode == "Upload Image":
     uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
     if uploaded:
-        image = Image.open(uploaded)
+        image = Image.open(uploaded).convert("RGB")  # FIXED
         image = np.array(image)
 
         processed, count = detect(image)
