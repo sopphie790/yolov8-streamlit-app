@@ -177,6 +177,8 @@ if mode == "Live Camera":
         image = np.array(image)
 
         processed, count, classes, alert, class_count = detect(image)
+        st.write("Detected Objects:", list(set(classes)))
+        st.write("Class Breakdown:", class_count)
 
         col1, col2, col3 = st.columns(3)
 
@@ -203,7 +205,7 @@ elif mode == "Upload Image":
         image = Image.open(uploaded).convert("RGB")
         image = np.array(image)
 
-        processed, count, classes, alert = detect(image)
+        processed, count, classes, alert, class_count = detect(image)
 
         col1, col2 = st.columns(2)
 
