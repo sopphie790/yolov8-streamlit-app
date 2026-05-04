@@ -1,7 +1,6 @@
 import streamlit as st
 from ultralytics import YOLO
 import numpy as np
-from PIL import Image
 import cv2
 from datetime import datetime
 import pandas as pd
@@ -11,60 +10,48 @@ import matplotlib.pyplot as plt
 # PAGE CONFIG
 # =========================
 st.set_page_config(
-    page_title="AI Vision Alert System",
-    page_icon="🚨",
+    page_title="Enterprise AI CCTV System",
+    page_icon="📡",
     layout="wide"
 )
 
 # =========================
-# UI DESIGN FIXED
+# UI DESIGN (CCTV STYLE)
 # =========================
 st.markdown("""
 <style>
 .main {
-    background-color: #0e1117;
+    background-color: #0b0f1a;
 }
 
-/* SIDEBAR */
+/* SIDEBAR CCTV STYLE */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
-        rgba(255, 77, 166, 0.65),
-        rgba(255, 26, 117, 0.65)
+        rgba(0, 0, 0, 0.85),
+        rgba(20, 20, 20, 0.85)
     );
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(10px);
 }
 
-/* SIDEBAR TEXT */
-[data-testid="stSidebar"] * {
-    color: white !important;
-    font-weight: 600;
+/* TEXT */
+h1, h2, h3 {
+    color: #00ffcc;
 }
 
 /* BUTTON */
 .stButton>button {
-    background: linear-gradient(90deg, #ff4da6, #ff1a75);
-    color: white;
-    border-radius: 12px;
-    border: none;
-    padding: 0.6em 1em;
+    background: linear-gradient(90deg, #00ffcc, #00b3ff);
+    color: black;
+    border-radius: 10px;
     font-weight: bold;
     width: 100%;
-}
-
-.stButton>button:hover {
-    color: black !important;
-    transform: scale(1.03);
-}
-
-h1, h2, h3 {
-    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# MODEL
+# MODEL (TRACKING ENABLED)
 # =========================
 @st.cache_resource
 def load_model():
@@ -72,172 +59,122 @@ def load_model():
 
 model = load_model()
 
-CONF_THRESHOLD = 0.2
+CONF = 0.25
 
 # =========================
-# ALERT SYSTEM
+# SESSION STATE (CCTV LOGS)
 # =========================
-if "alerts" not in st.session_state:
-    st.session_state.alerts = []
-
-if "last_alert" not in st.session_state:
-    st.session_state.last_alert = ""
-
-def check_alerts(detected_classes):
-    alert_keywords = ["person", "car", "truck", "knife", "bottle"]
-
-    triggered = [obj for obj in detected_classes if obj in alert_keywords]
-
-    if triggered:
-        alert_msg = f"🚨 ALERT: {', '.join(set(triggered))} detected!"
-
-        if alert_msg != st.session_state.last_alert:
-            st.session_state.alerts.append({
-                "time": datetime.now().strftime("%H:%M:%S"),
-                "message": alert_msg
-            })
-            st.session_state.last_alert = alert_msg
-
-        return alert_msg
-
-    return None
+if "logs" not in st.session_state:
+    st.session_state.logs = []
 
 # =========================
-# DETECTION FUNCTION
+# CCTV DETECTION (WITH TRACKING)
 # =========================
-def detect(frame):
-    results = model.predict(frame, conf=CONF_THRESHOLD, verbose=False)
+def process_frame(frame):
+    results = model.track(frame, persist=True, conf=CONF, verbose=False)
 
     annotated = results[0].plot()
 
     boxes = results[0].boxes
 
-    classes = []
-    class_count = {}
+    class_counts = {}
+    detected = []
 
     if boxes is not None:
-        for c in boxes.cls:
-            name = model.names[int(c)]
-            classes.append(name)
+        for i in range(len(boxes)):
+            cls_id = int(boxes.cls[i])
+            name = model.names[cls_id]
+            detected.append(name)
 
-            if name in class_count:
-                class_count[name] += 1
+            if name in class_counts:
+                class_counts[name] += 1
             else:
-                class_count[name] = 1
+                class_counts[name] = 1
 
-    alert = check_alerts(classes)
-
-    total_count = sum(class_count.values())
-
-    return annotated, total_count, classes, alert, class_count
+    return annotated, class_counts, detected
 
 # =========================
-# 🔥 AI ANALYTICS DASHBOARD
+# ANALYTICS PANEL
 # =========================
-def render_analytics(class_count):
-    if not class_count:
+def analytics_panel(class_counts):
+    if not class_counts:
         return
 
-    df = pd.DataFrame(list(class_count.items()), columns=["Object", "Count"])
-
-    st.subheader("📊 AI Analytics Dashboard")
-
-    top = df.sort_values("Count", ascending=False).iloc[0]
+    df = pd.DataFrame(list(class_counts.items()), columns=["Object", "Count"])
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("Top Object", top["Object"])
+        st.metric("Top Object", df.sort_values("Count", ascending=False).iloc[0]["Object"])
 
     with col2:
-        st.metric("Highest Count", int(top["Count"]))
+        st.metric("Total Types", len(df))
 
     fig, ax = plt.subplots()
     ax.bar(df["Object"], df["Count"])
-    ax.set_title("Detection Breakdown")
-    ax.set_xlabel("Objects")
+    ax.set_title("Live CCTV Detection Analytics")
     ax.set_ylabel("Count")
     plt.xticks(rotation=45)
 
     st.pyplot(fig)
 
 # =========================
-# SIDEBAR
+# TITLE
+# =========================
+st.title("📡 Enterprise AI CCTV Surveillance System")
+st.write("Real-time object tracking + analytics + monitoring dashboard")
+
+# =========================
+# SIDEBAR (CONTROL ROOM)
 # =========================
 with st.sidebar:
-    st.header("⚙️ Control Panel")
+    st.header("🎛 CCTV Control Room")
 
-    mode = st.selectbox("Select Mode", ["Live Camera", "Upload Image"])
+    start = st.checkbox("▶ Start Surveillance")
 
     st.markdown("---")
+    st.subheader("📊 Live Logs")
 
-    st.subheader("🚨 AI Alerts")
-
-    if st.session_state.alerts:
-        for a in reversed(st.session_state.alerts[-5:]):
-            st.error(f"{a['time']} - {a['message']}")
+    if st.session_state.logs:
+        for log in reversed(st.session_state.logs[-6:]):
+            st.success(log)
     else:
-        st.info("No alerts yet")
+        st.info("No activity detected")
 
 # =========================
-# MAIN APP
+# MAIN STREAM
 # =========================
+if start:
 
-if mode == "Live Camera":
-    st.subheader("📷 Live AI Detection + Alerts")
+    st.subheader("📷 LIVE CCTV FEED")
 
-    img_file = st.camera_input("Open Camera")
+    frame_window = st.empty()
+    analytics_window = st.empty()
 
-    if img_file:
-        image = Image.open(img_file).convert("RGB")
-        image = np.array(image)
+    cap = cv2.VideoCapture(0)
 
-        processed, count, classes, alert, class_count = detect(image)
+    while cap.isOpened():
+        ret, frame = cap.read()
 
-        col1, col2, col3 = st.columns(3)
+        if not ret:
+            st.error("Camera not accessible")
+            break
 
-        with col1:
-            st.image(image, caption="Original")
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        with col2:
-            st.image(processed, caption="AI Detection")
+        processed, class_counts, detected = process_frame(frame)
 
-        with col3:
-            st.metric("Objects", count)
+        # LOG EVENTS
+        if detected:
+            log = f"{datetime.now().strftime('%H:%M:%S')} - {', '.join(set(detected))}"
+            st.session_state.logs.append(log)
 
-        if alert:
-            st.error(alert)
+        frame_window.image(processed, channels="RGB")
 
-        st.write("Detected Objects:", list(set(classes)))
-        st.write("Class Breakdown:", class_count)
+        with analytics_window.container():
+            analytics_panel(class_counts)
 
-        render_analytics(class_count)
+    cap.release()
 
-elif mode == "Upload Image":
-    st.subheader("🖼️ AI Detection + Alert System")
-
-    uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
-
-    if uploaded:
-        image = Image.open(uploaded).convert("RGB")
-        image = np.array(image)
-
-        processed, count, classes, alert, class_count = detect(image)
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.image(image, caption="Original")
-
-        with col2:
-            st.image(processed, caption="Detected")
-
-        st.metric("Objects Detected", count)
-
-        if alert:
-            st.error(alert)
-
-        st.write("Detected Objects:", list(set(classes)))
-        st.write("Class Breakdown:", class_count)
-
-        render_analytics(class_count)
+else:
+    st.info("Activate CCTV surveillance from sidebar")
