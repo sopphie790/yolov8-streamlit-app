@@ -10,7 +10,7 @@ from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfigura
 # PAGE CONFIG
 # =========================
 st.set_page_config(
-    page_title="AI Vision SaaS Pro | Live Detection",
+    page_title="AI Vision SaaS Pro | Tracking System",
     page_icon="🎯",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -21,26 +21,19 @@ st.set_page_config(
 # =========================
 st.markdown("""
 <style>
-    .main { background-color: #0e1117; }
-    .block-container { padding-top: 2rem; }
-    .dashboard-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: white;
-    }
-    .subtitle {
-        color: #a0a0a0;
-        font-size: 14px;
-    }
+.main { background-color: #0e1117; }
+.block-container { padding-top: 2rem; }
+.dashboard-title { font-size: 28px; font-weight: 700; color: white; }
+.subtitle { color: #a0a0a0; font-size: 14px; }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# LOAD MODEL
+# LOAD MODEL (TRACKING ENABLED)
 # =========================
 @st.cache_resource
 def load_model():
-    return YOLO("yolov8n.pt")
+    return YOLO("yolov8s.pt")
 
 model = load_model()
 
@@ -50,22 +43,42 @@ model = load_model()
 with st.sidebar:
     st.title("⚙️ Control Panel")
     mode = st.selectbox("Select Mode", ["Live Camera (WebRTC)", "Image Upload"])
-    conf = st.slider("Confidence Threshold", 0.1, 1.0, 0.5)
-    st.info("AI SaaS Vision System")
+    conf = st.slider("Confidence Threshold", 0.1, 1.0, 0.25)
+    st.info("Multi-Object Tracking System (YOLOv8 + ByteTrack)")
 
 # =========================
 # HEADER
 # =========================
-st.markdown("<div class='dashboard-title'>🎯 AI Vision SaaS Pro Dashboard</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Real-time Object Detection powered by YOLOv8</div>", unsafe_allow_html=True)
+st.markdown("<div class='dashboard-title'>🎯 AI Vision Pro Tracking Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Real-time Multi-Object Detection + Tracking (ID enabled)</div>", unsafe_allow_html=True)
 
 # =========================
-# DETECTION FUNCTION
+# TRACKING FUNCTION
 # =========================
-def detect_frame(frame):
-    results = model.predict(frame, conf=conf)
+def track_frame(frame):
+    results = model.track(frame, conf=conf, persist=True, verbose=False)
+
     annotated = results[0].plot()
-    count = len(results[0].boxes)
+
+    count = 0
+    if results[0].boxes is not None:
+        count = len(results[0].boxes)
+
+        # Draw tracking IDs manually (extra clarity)
+        for box in results[0].boxes:
+            if box.id is not None:
+                x1, y1, x2, y2 = box.xyxy[0]
+                track_id = int(box.id[0])
+                cv2.putText(
+                    annotated,
+                    f"ID {track_id}",
+                    (int(x1), int(y1) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (255, 0, 0),
+                    2
+                )
+
     return annotated, count
 
 # =========================
@@ -76,17 +89,17 @@ RTC_CONFIGURATION = RTCConfiguration({
 })
 
 # =========================
-# VIDEO TRANSFORMER
+# VIDEO TRANSFORMER (TRACKING)
 # =========================
-class YOLOTransformer(VideoTransformerBase):
+class YOLOTracker(VideoTransformerBase):
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
 
-        processed, count = detect_frame(img)
+        processed, count = track_frame(img)
 
         cv2.putText(
             processed,
-            f"Objects: {count}",
+            f"Tracked Objects: {count}",
             (20, 40),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
@@ -100,26 +113,17 @@ class YOLOTransformer(VideoTransformerBase):
 # MAIN APP
 # =========================
 if mode == "Live Camera (WebRTC)":
-    st.subheader("📷 Live Camera (Stable Mode)")
+    st.subheader("📡 Live Multi-Object Tracking")
 
-    img_file = st.camera_input("Capture Frame")
-
-    if img_file:
-        image = Image.open(img_file)
-        image = np.array(image)
-
-        processed, count = detect_frame(image)
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.image(image, caption="Original")
-
-        with col2:
-            st.image(processed, caption=f"Detected Objects: {count}")
+    webrtc_streamer(
+        key="yolo-tracking",
+        video_transformer_factory=YOLOTracker,
+        rtc_configuration=RTC_CONFIGURATION,
+        media_stream_constraints={"video": True, "audio": False}
+    )
 
 elif mode == "Image Upload":
-    st.subheader("🖼️ Image Detection")
+    st.subheader("🖼️ Object Tracking (Image)")
 
     uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
@@ -127,7 +131,7 @@ elif mode == "Image Upload":
         image = Image.open(uploaded)
         image = np.array(image)
 
-        processed, count = detect_frame(image)
+        processed, count = track_frame(image)
 
         col1, col2 = st.columns(2)
 
@@ -135,10 +139,10 @@ elif mode == "Image Upload":
             st.image(image, caption="Original")
 
         with col2:
-            st.image(processed, caption=f"Detected Objects: {count}")
+            st.image(processed, caption=f"Tracked Objects: {count}")
 
 # =========================
 # FOOTER
 # =========================
 st.markdown("---")
-st.markdown("<center style='color:gray'>AI SaaS Pro Dashboard | YOLOv8 + WebRTC</center>", unsafe_allow_html=True)
+st.markdown("<center style='color:gray'>YOLOv8 Multi-Object Tracking SaaS Pro | ByteTrack Enabled</center>", unsafe_allow_html=True)
