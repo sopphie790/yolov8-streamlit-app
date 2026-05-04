@@ -1,19 +1,20 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 from ultralytics import YOLO
-import av
+import numpy as np
+from PIL import Image
 import cv2
+import time
 
 # =========================
 # PAGE CONFIG
 # =========================
-st.set_page_config(page_title="Live Object Detection", layout="wide")
+st.set_page_config(page_title="Object Detection App", layout="centered")
 
-st.title("🎥 Live Object Detection & Tracing")
-st.write("Real-time AI detection using YOLOv8 + Webcam")
+st.title("📸 AI Object Detection (Camera Capture)")
+st.write("Capture an image and detect objects using YOLOv8")
 
 # =========================
-# LOAD MODEL (CACHE)
+# LOAD MODEL
 # =========================
 @st.cache_resource
 def load_model():
@@ -22,70 +23,48 @@ def load_model():
 model = load_model()
 
 # =========================
-# GLOBAL COUNTER
+# CAMERA INPUT
 # =========================
-object_counter = {}
+img_file = st.camera_input("📷 Take a picture")
 
-# =========================
-# VIDEO PROCESSOR CLASS
-# =========================
-class VideoProcessor(VideoProcessorBase):
+if img_file is not None:
+    start_time = time.time()
 
-    def recv(self, frame):
-        global object_counter
+    image = Image.open(img_file)
+    img = np.array(image)
 
-        img = frame.to_ndarray(format="bgr24")
+    # =========================
+    # YOLO DETECTION
+    # =========================
+    results = model(img)
 
-        # YOLO tracking
-        results = model.track(
-            img,
-            persist=True,
-            conf=0.5,
-            verbose=False
-        )
+    annotated_frame = results[0].plot()
 
-        annotated_frame = results[0].plot()
+    st.image(annotated_frame, caption="Detected Objects", use_column_width=True)
 
-        # =========================
-        # OBJECT COUNTING
-        # =========================
-        if results[0].boxes is not None:
-            object_counter = {}
-            for cls in results[0].boxes.cls:
-                label = model.names[int(cls)]
-                object_counter[label] = object_counter.get(label, 0) + 1
+    # =========================
+    # OBJECT COUNTING
+    # =========================
+    counts = {}
+    if results[0].boxes is not None:
+        for cls in results[0].boxes.cls:
+            label = model.names[int(cls)]
+            counts[label] = counts.get(label, 0) + 1
 
-        # =========================
-        # ALERT FEATURE
-        # =========================
-        if "cell phone" in object_counter:
-            cv2.putText(
-                annotated_frame,
-                "📱 PHONE DETECTED!",
-                (20, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 0, 255),
-                3
-            )
+    st.subheader("📊 Object Count")
+    st.write(counts)
 
-        return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+    # =========================
+    # ALERT FEATURE
+    # =========================
+    if "cell phone" in counts:
+        st.warning("📱 Cellphone detected!")
 
-# =========================
-# START STREAM
-# =========================
-webrtc_streamer(
-    key="object-detection",
-    video_processor_factory=VideoProcessor,
-    async_processing=True,
-    rtc_configuration={
-        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-    },
-    media_stream_constraints={"video": True, "audio": False},
-)
+    if "person" in counts:
+        st.success("👤 Person detected!")
 
-# =========================
-# DISPLAY OBJECT COUNT
-# =========================
-st.subheader("📊 Detected Objects Count")
-st.write(object_counter)
+    # =========================
+    # PERFORMANCE INFO
+    # =========================
+    end_time = time.time()
+    st.caption(f"⏱ Detection Time: {round(end_time - start_time, 2)} seconds")
