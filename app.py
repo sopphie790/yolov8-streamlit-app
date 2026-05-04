@@ -4,43 +4,45 @@ from ultralytics import YOLO
 import av
 
 # =========================
-# PAGE CONFIG (PRO UI LOOK)
+# PAGE CONFIG (PRO LOOK)
 # =========================
 st.set_page_config(
-    page_title="AI Live Detection Dashboard",
+    page_title="AI Detection Dashboard",
     page_icon="🎥",
     layout="wide"
 )
 
 # =========================
-# SIDEBAR DASHBOARD
+# SIDEBAR CONTROLS
 # =========================
-st.sidebar.title("⚙️ Control Panel")
-st.sidebar.markdown("Configure your AI detection system")
+st.sidebar.title("⚙️ AI Control Panel")
 
 conf_threshold = st.sidebar.slider(
     "Confidence Threshold",
-    0.0, 1.0, 0.5, 0.05
+    min_value=0.1,
+    max_value=1.0,
+    value=0.5,
+    step=0.05
 )
 
-start_camera = st.sidebar.toggle("🎥 Start Camera", value=True)
+camera_on = st.sidebar.toggle("🎥 Start Live Camera", value=True)
 
 st.sidebar.markdown("---")
-st.sidebar.info("YOLOv8 Live Detection System")
+st.sidebar.success("YOLOv8 + WebRTC System Ready")
 
 # =========================
-# MAIN HEADER
+# MAIN DASHBOARD UI
 # =========================
 st.title("🎥 AI Object Detection Dashboard")
-st.markdown("Real-time object detection using YOLOv8 + WebRTC")
+st.markdown("Real-time detection using YOLOv8 + Streamlit WebRTC")
 
-if start_camera:
-    st.success("🟢 Camera is running")
+if camera_on:
+    st.success("🟢 Live Camera Active")
 else:
-    st.warning("🔴 Camera is stopped")
+    st.warning("🔴 Camera Stopped")
 
 # =========================
-# LOAD MODEL (CACHE)
+# LOAD MODEL (SAFE CACHE)
 # =========================
 @st.cache_resource
 def load_model():
@@ -61,22 +63,25 @@ def video_frame_callback(frame):
         verbose=False
     )
 
-    annotated = results[0].plot()
+    annotated_frame = results[0].plot()
 
-    return av.VideoFrame.from_ndarray(annotated, format="bgr24")
+    return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
 
 # =========================
-# LIVE STREAM (WEBRTC)
+# WEBSRTC STREAM (DEPLOY SAFE)
 # =========================
-if start_camera:
+if camera_on:
     webrtc_streamer(
-        key="pro-ai-dashboard",
+        key="ai-live-detection",
         video_frame_callback=video_frame_callback,
         async_processing=True,
+        media_stream_constraints={
+            "video": True,
+            "audio": False
+        },
         rtc_configuration={
             "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-        },
-        media_stream_constraints={"video": True, "audio": False},
+        }
     )
 else:
-    st.info("Camera is turned off from sidebar")
+    st.info("Camera is turned off. Enable it from sidebar.")
