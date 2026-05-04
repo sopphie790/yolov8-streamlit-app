@@ -182,7 +182,23 @@ with st.sidebar:
         st.markdown("### 👩‍💻 Developer")
         st.markdown("**Liza S. Jaime**")
         st.markdown("BSCS - 3A")
-
+# =========================
+# 🤖 AI ENGINE STATUS BADGE
+# =========================
+st.markdown("""
+<div style="
+    background: rgba(0, 255, 150, 0.08);
+    border: 1px solid rgba(0, 255, 150, 0.5);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 10px;
+">
+    <span style="color:#00ffae; font-weight:bold;">
+        🟢 AI Engine Running
+    </span>
+</div>
+""", unsafe_allow_html=True)
 # =========================
 # MAIN APP
 # =========================
