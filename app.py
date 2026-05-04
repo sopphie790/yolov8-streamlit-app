@@ -1,8 +1,8 @@
-import streamlit as st
-from ultralytics import YOLO
+import cv2
 import numpy as np
 from PIL import Image
-import cv2
+from ultralytics import YOLO
+import streamlit as st
 
 st.set_page_config(page_title="YOLOv8 Detection", layout="wide")
 
