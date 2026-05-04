@@ -3,34 +3,57 @@ from ultralytics import YOLO
 import numpy as np
 from PIL import Image
 import cv2
-import pandas as pd
-from datetime import datetime
 
 # =========================
-# PAGE CONFIG (ENTERPRISE SAAS)
+# PAGE CONFIG
 # =========================
 st.set_page_config(
-    page_title="Enterprise AI Tracking SaaS",
-    page_icon="🧠",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="AI Vision SaaS Pro",
+    page_icon="🎥",
+    layout="wide"
 )
 
 # =========================
-# GLOBAL STYLE
+# PROFESSIONAL UI (PINK SIDEBAR)
 # =========================
 st.markdown("""
 <style>
-.main { background-color: #0b0f1a; }
-.block-container { padding-top: 2rem; }
-.title { font-size: 30px; font-weight: 800; color: white; }
-.sub { color: #9aa4b2; }
-.card { background: rgba(255,255,255,0.06); padding: 15px; border-radius: 12px; }
+/* MAIN BACKGROUND */
+.main {
+    background-color: #0e1117;
+}
+
+/* SIDEBAR PINK DESIGN */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ff4da6, #ff1a75);
+}
+
+/* SIDEBAR TEXT */
+[data-testid="stSidebar"] * {
+    color: white !important;
+    font-weight: 500;
+}
+
+/* BUTTON STYLE */
+.stButton>button {
+    background: linear-gradient(90deg, #ff4da6, #ff1a75);
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 0.6em 1em;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.stButton>button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(90deg, #ff1a75, #ff4da6);
+}
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# MODEL
+# LOAD MODEL
 # =========================
 @st.cache_resource
 def load_model():
@@ -39,88 +62,43 @@ def load_model():
 model = load_model()
 
 # =========================
-# SESSION STATE (ENTERPRISE LOGGING)
+# TITLE (AS REQUESTED)
 # =========================
-if "log_data" not in st.session_state:
-    st.session_state.log_data = []
+st.title("🎥 Live Object Detection & Tracing")
+st.write("Point your camera at objects to identify them in real-time.")
 
 # =========================
-# SIDEBAR
-# =========================
-with st.sidebar:
-    st.title("🧠 Enterprise Control Panel")
-    mode = st.selectbox("Mode", ["Live Camera", "Image Analysis"])
-    conf = st.slider("Confidence", 0.1, 1.0, 0.3)
-    show_log = st.checkbox("Show Detection Logs")
-
-# =========================
-# HEADER
-# =========================
-st.markdown("<div class='title'>🧠 Enterprise AI Tracking SaaS</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub'>Real-time Object Intelligence + Analytics Engine</div>", unsafe_allow_html=True)
-
-# =========================
-# CORE FUNCTIONS
+# DETECTION FUNCTION
 # =========================
 def detect(frame):
-    results = model.predict(frame, conf=conf, verbose=False)
+    results = model.predict(frame, conf=0.3)
     annotated = results[0].plot()
-    boxes = results[0].boxes
+    count = len(results[0].boxes) if results[0].boxes is not None else 0
+    return annotated, count
 
-    count = len(boxes) if boxes is not None else 0
-
-    detected_classes = []
-    if boxes is not None:
-        for c in boxes.cls:
-            detected_classes.append(model.names[int(c)])
-
-    # LOGGING (ENTERPRISE FEATURE)
-    st.session_state.log_data.append({
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "count": count,
-        "objects": ", ".join(detected_classes)
-    })
-
-    return annotated, count, detected_classes
+# =========================
+# SIDEBAR MENU
+# =========================
+with st.sidebar:
+    st.header("⚙️ Control Panel")
+    mode = st.selectbox("Select Mode", ["Live Camera", "Upload Image"])
+    st.markdown("---")
+    st.info("AI SaaS Object Detection System")
 
 # =========================
 # MAIN APP
 # =========================
-if mode == "Live Camera":
-    st.subheader("📷 Live Intelligence Feed")
 
-    img_file = st.camera_input("Capture Frame")
+if mode == "Live Camera":
+    st.subheader("📷 Camera Detection")
+
+    img_file = st.camera_input("Open Camera")
 
     if img_file:
         image = Image.open(img_file)
         image = np.array(image)
 
-        processed, count, classes = detect(image)
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.image(image, caption="Original")
-
-        with col2:
-            st.image(processed, caption="AI Detection")
-
-        with col3:
-            st.metric("Objects Detected", count)
-
-            st.write("Detected Classes:")
-            st.write(list(set(classes)))
-
-elif mode == "Image Analysis":
-    st.subheader("🖼️ Enterprise Image Analysis")
-
-    uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
-
-    if uploaded:
-        image = Image.open(uploaded)
-        image = np.array(image)
-
-        processed, count, classes = detect(image)
+        processed, count = detect(image)
 
         col1, col2 = st.columns(2)
 
@@ -128,30 +106,23 @@ elif mode == "Image Analysis":
             st.image(image, caption="Original")
 
         with col2:
-            st.image(processed, caption="AI Processed")
+            st.image(processed, caption=f"Detected Objects: {count}")
 
-        st.success(f"Detected {count} objects")
+elif mode == "Upload Image":
+    st.subheader("🖼️ Image Detection")
 
-        st.write("### Detected Objects")
-        st.write(list(set(classes)))
+    uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
-# =========================
-# ANALYTICS DASHBOARD
-# =========================
-if show_log:
-    st.markdown("---")
-    st.subheader("📊 Detection Analytics (Enterprise Log)")
+    if uploaded:
+        image = Image.open(uploaded)
+        image = np.array(image)
 
-    if st.session_state.log_data:
-        df = pd.DataFrame(st.session_state.log_data)
-        st.dataframe(df)
+        processed, count = detect(image)
 
-        st.bar_chart(df["count"])
-    else:
-        st.info("No logs yet")
+        col1, col2 = st.columns(2)
 
-# =========================
-# FOOTER
-# =========================
-st.markdown("---")
-st.markdown("<center style='color:gray'>Enterprise AI SaaS | Tracking + Analytics Engine</center>", unsafe_allow_html=True)
+        with col1:
+            st.image(image)
+
+        with col2:
+            st.image(processed, caption=f"Detected Objects: {count}")
