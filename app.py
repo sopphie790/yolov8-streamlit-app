@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 import cv2
 from datetime import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # =========================
 # PAGE CONFIG
@@ -23,7 +25,7 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* SIDEBAR TRANSPARENT FIX */
+/* SIDEBAR */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
@@ -39,7 +41,7 @@ st.markdown("""
     font-weight: 600;
 }
 
-/* BUTTON STYLE + BLACK TEXT ON HOVER */
+/* BUTTON */
 .stButton>button {
     background: linear-gradient(90deg, #ff4da6, #ff1a75);
     color: white;
@@ -48,16 +50,13 @@ st.markdown("""
     padding: 0.6em 1em;
     font-weight: bold;
     width: 100%;
-    transition: 0.3s;
 }
 
 .stButton>button:hover {
     color: black !important;
     transform: scale(1.03);
-    box-shadow: 0px 4px 20px rgba(255, 26, 117, 0.3);
 }
 
-/* TITLES */
 h1, h2, h3 {
     color: white;
 }
@@ -65,7 +64,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =========================
-# MODEL (IMPROVED DETECTION)
+# MODEL
 # =========================
 @st.cache_resource
 def load_model():
@@ -73,28 +72,17 @@ def load_model():
 
 model = load_model()
 
-# LOWER CONFIDENCE = MORE OBJECTS DETECTED
 CONF_THRESHOLD = 0.2
-
-# =========================
-# ALERT STATE
-# =========================
-if "alerts" not in st.session_state:
-    st.session_state.alerts = []
-
-# prevent spam alerts
-if "last_alert" not in st.session_state:
-    st.session_state.last_alert = ""
-
-# =========================
-# TITLE
-# =========================
-st.title("🚨 AI Object Detection Alert System")
-st.write("Real-time detection with smart AI alerts.")
 
 # =========================
 # ALERT SYSTEM
 # =========================
+if "alerts" not in st.session_state:
+    st.session_state.alerts = []
+
+if "last_alert" not in st.session_state:
+    st.session_state.last_alert = ""
+
 def check_alerts(detected_classes):
     alert_keywords = ["person", "car", "truck", "knife", "bottle"]
 
@@ -103,7 +91,6 @@ def check_alerts(detected_classes):
     if triggered:
         alert_msg = f"🚨 ALERT: {', '.join(set(triggered))} detected!"
 
-        # prevent duplicate spam
         if alert_msg != st.session_state.last_alert:
             st.session_state.alerts.append({
                 "time": datetime.now().strftime("%H:%M:%S"),
@@ -116,7 +103,7 @@ def check_alerts(detected_classes):
     return None
 
 # =========================
-# DETECTION FUNCTION (FIXED)
+# DETECTION FUNCTION
 # =========================
 def detect(frame):
     results = model.predict(frame, conf=CONF_THRESHOLD, verbose=False)
@@ -133,7 +120,6 @@ def detect(frame):
             name = model.names[int(c)]
             classes.append(name)
 
-            # accurate per-class counting
             if name in class_count:
                 class_count[name] += 1
             else:
@@ -144,6 +130,36 @@ def detect(frame):
     total_count = sum(class_count.values())
 
     return annotated, total_count, classes, alert, class_count
+
+# =========================
+# 🔥 AI ANALYTICS DASHBOARD
+# =========================
+def render_analytics(class_count):
+    if not class_count:
+        return
+
+    df = pd.DataFrame(list(class_count.items()), columns=["Object", "Count"])
+
+    st.subheader("📊 AI Analytics Dashboard")
+
+    top = df.sort_values("Count", ascending=False).iloc[0]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("Top Object", top["Object"])
+
+    with col2:
+        st.metric("Highest Count", int(top["Count"]))
+
+    fig, ax = plt.subplots()
+    ax.bar(df["Object"], df["Count"])
+    ax.set_title("Detection Breakdown")
+    ax.set_xlabel("Objects")
+    ax.set_ylabel("Count")
+    plt.xticks(rotation=45)
+
+    st.pyplot(fig)
 
 # =========================
 # SIDEBAR
@@ -177,8 +193,6 @@ if mode == "Live Camera":
         image = np.array(image)
 
         processed, count, classes, alert, class_count = detect(image)
-        st.write("Detected Objects:", list(set(classes)))
-        st.write("Class Breakdown:", class_count)
 
         col1, col2, col3 = st.columns(3)
 
@@ -195,6 +209,9 @@ if mode == "Live Camera":
             st.error(alert)
 
         st.write("Detected Objects:", list(set(classes)))
+        st.write("Class Breakdown:", class_count)
+
+        render_analytics(class_count)
 
 elif mode == "Upload Image":
     st.subheader("🖼️ AI Detection + Alert System")
@@ -221,3 +238,6 @@ elif mode == "Upload Image":
             st.error(alert)
 
         st.write("Detected Objects:", list(set(classes)))
+        st.write("Class Breakdown:", class_count)
+
+        render_analytics(class_count)
