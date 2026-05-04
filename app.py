@@ -2,81 +2,92 @@ import streamlit as st
 from ultralytics import YOLO
 import numpy as np
 from PIL import Image
-import av
 import cv2
+import pandas as pd
+from datetime import datetime
 
 # =========================
-# PAGE CONFIG
+# PAGE CONFIG (ENTERPRISE SAAS)
 # =========================
 st.set_page_config(
-    page_title="AI Vision SaaS Pro | Tracking System",
-    page_icon="🎯",
+    page_title="Enterprise AI Tracking SaaS",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =========================
-# UI
+# GLOBAL STYLE
 # =========================
 st.markdown("""
 <style>
-.main { background-color: #0e1117; }
+.main { background-color: #0b0f1a; }
 .block-container { padding-top: 2rem; }
-.dashboard-title { font-size: 28px; font-weight: 700; color: white; }
-.subtitle { color: #a0a0a0; font-size: 14px; }
+.title { font-size: 30px; font-weight: 800; color: white; }
+.sub { color: #9aa4b2; }
+.card { background: rgba(255,255,255,0.06); padding: 15px; border-radius: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# LOAD MODEL (FIXED)
+# MODEL
 # =========================
 @st.cache_resource
 def load_model():
     return YOLO("yolov8n.pt")
 
-model = load_model()  # 🔴 FIXED: GLOBAL MODEL
+model = load_model()
+
+# =========================
+# SESSION STATE (ENTERPRISE LOGGING)
+# =========================
+if "log_data" not in st.session_state:
+    st.session_state.log_data = []
 
 # =========================
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.title("⚙️ Control Panel")
-    mode = st.selectbox("Select Mode", ["Live Camera", "Image Upload"])
-    conf = st.slider("Confidence Threshold", 0.1, 1.0, 0.25)
+    st.title("🧠 Enterprise Control Panel")
+    mode = st.selectbox("Mode", ["Live Camera", "Image Analysis"])
+    conf = st.slider("Confidence", 0.1, 1.0, 0.3)
+    show_log = st.checkbox("Show Detection Logs")
 
 # =========================
 # HEADER
 # =========================
-st.markdown("<div class='dashboard-title'>🎯 AI Vision Pro Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🧠 Enterprise AI Tracking SaaS</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub'>Real-time Object Intelligence + Analytics Engine</div>", unsafe_allow_html=True)
 
 # =========================
-# DETECTION FUNCTION (FIXED)
+# CORE FUNCTIONS
 # =========================
-def detect_frame(frame):
+def detect(frame):
     results = model.predict(frame, conf=conf, verbose=False)
-
     annotated = results[0].plot()
-    count = len(results[0].boxes) if results[0].boxes is not None else 0
+    boxes = results[0].boxes
 
-    return annotated, count
+    count = len(boxes) if boxes is not None else 0
 
-# =========================
-# TRACKING FUNCTION
-# =========================
-def track_frame(frame):
-    results = model.track(frame, conf=conf, persist=True, verbose=False)
+    detected_classes = []
+    if boxes is not None:
+        for c in boxes.cls:
+            detected_classes.append(model.names[int(c)])
 
-    annotated = results[0].plot()
-    count = len(results[0].boxes) if results[0].boxes is not None else 0
+    # LOGGING (ENTERPRISE FEATURE)
+    st.session_state.log_data.append({
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "count": count,
+        "objects": ", ".join(detected_classes)
+    })
 
-    return annotated, count
+    return annotated, count, detected_classes
 
 # =========================
 # MAIN APP
 # =========================
-
 if mode == "Live Camera":
-    st.subheader("📷 Live Camera Detection")
+    st.subheader("📷 Live Intelligence Feed")
 
     img_file = st.camera_input("Capture Frame")
 
@@ -84,18 +95,24 @@ if mode == "Live Camera":
         image = Image.open(img_file)
         image = np.array(image)
 
-        processed, count = detect_frame(image)  # FIXED FUNCTION
+        processed, count, classes = detect(image)
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
             st.image(image, caption="Original")
 
         with col2:
-            st.image(processed, caption=f"Detected Objects: {count}")
+            st.image(processed, caption="AI Detection")
 
-elif mode == "Image Upload":
-    st.subheader("🖼️ Object Tracking")
+        with col3:
+            st.metric("Objects Detected", count)
+
+            st.write("Detected Classes:")
+            st.write(list(set(classes)))
+
+elif mode == "Image Analysis":
+    st.subheader("🖼️ Enterprise Image Analysis")
 
     uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
@@ -103,7 +120,7 @@ elif mode == "Image Upload":
         image = Image.open(uploaded)
         image = np.array(image)
 
-        processed, count = track_frame(image)
+        processed, count, classes = detect(image)
 
         col1, col2 = st.columns(2)
 
@@ -111,10 +128,30 @@ elif mode == "Image Upload":
             st.image(image, caption="Original")
 
         with col2:
-            st.image(processed, caption=f"Tracked Objects: {count}")
+            st.image(processed, caption="AI Processed")
+
+        st.success(f"Detected {count} objects")
+
+        st.write("### Detected Objects")
+        st.write(list(set(classes)))
+
+# =========================
+# ANALYTICS DASHBOARD
+# =========================
+if show_log:
+    st.markdown("---")
+    st.subheader("📊 Detection Analytics (Enterprise Log)")
+
+    if st.session_state.log_data:
+        df = pd.DataFrame(st.session_state.log_data)
+        st.dataframe(df)
+
+        st.bar_chart(df["count"])
+    else:
+        st.info("No logs yet")
 
 # =========================
 # FOOTER
 # =========================
 st.markdown("---")
-st.markdown("<center style='color:gray'>YOLOv8 SaaS Pro | Fixed Stable Version</center>", unsafe_allow_html=True)
+st.markdown("<center style='color:gray'>Enterprise AI SaaS | Tracking + Analytics Engine</center>", unsafe_allow_html=True)
