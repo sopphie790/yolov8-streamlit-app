@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # =========================
-# UI DESIGN
+# UI DESIGN FIXED
 # =========================
 st.markdown("""
 <style>
@@ -23,22 +23,23 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* SIDEBAR */
+/* SIDEBAR TRANSPARENT FIX */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
-        rgba(255, 77, 166, 0.75),
-        rgba(255, 26, 117, 0.75)
+        rgba(255, 77, 166, 0.65),
+        rgba(255, 26, 117, 0.65)
     );
     backdrop-filter: blur(14px);
 }
 
+/* SIDEBAR TEXT */
 [data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 600;
 }
 
-/* BUTTON */
+/* BUTTON STYLE + BLACK TEXT ON HOVER */
 .stButton>button {
     background: linear-gradient(90deg, #ff4da6, #ff1a75);
     color: white;
@@ -47,8 +48,16 @@ st.markdown("""
     padding: 0.6em 1em;
     font-weight: bold;
     width: 100%;
+    transition: 0.3s;
 }
 
+.stButton>button:hover {
+    color: black !important;
+    transform: scale(1.03);
+    box-shadow: 0px 4px 20px rgba(255, 26, 117, 0.3);
+}
+
+/* TITLES */
 h1, h2, h3 {
     color: white;
 }
@@ -56,7 +65,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =========================
-# MODEL
+# MODEL (IMPROVED DETECTION)
 # =========================
 @st.cache_resource
 def load_model():
@@ -64,45 +73,53 @@ def load_model():
 
 model = load_model()
 
+# LOWER CONFIDENCE = MORE OBJECTS DETECTED
+CONF_THRESHOLD = 0.2
+
 # =========================
-# ALERT SYSTEM STATE
+# ALERT STATE
 # =========================
 if "alerts" not in st.session_state:
     st.session_state.alerts = []
+
+# prevent spam alerts
+if "last_alert" not in st.session_state:
+    st.session_state.last_alert = ""
 
 # =========================
 # TITLE
 # =========================
 st.title("🚨 AI Object Detection Alert System")
-st.write("Real-time detection with automated AI alerts.")
+st.write("Real-time detection with smart AI alerts.")
 
 # =========================
-# ALERT FUNCTION
+# ALERT SYSTEM
 # =========================
 def check_alerts(detected_classes):
     alert_keywords = ["person", "car", "truck", "knife", "bottle"]
 
-    triggered = []
-
-    for obj in detected_classes:
-        if obj in alert_keywords:
-            triggered.append(obj)
+    triggered = [obj for obj in detected_classes if obj in alert_keywords]
 
     if triggered:
-        alert_msg = f"🚨 ALERT: {', '.join(triggered)} detected!"
-        st.session_state.alerts.append({
-            "time": datetime.now().strftime("%H:%M:%S"),
-            "message": alert_msg
-        })
+        alert_msg = f"🚨 ALERT: {', '.join(set(triggered))} detected!"
+
+        # prevent duplicate spam
+        if alert_msg != st.session_state.last_alert:
+            st.session_state.alerts.append({
+                "time": datetime.now().strftime("%H:%M:%S"),
+                "message": alert_msg
+            })
+            st.session_state.last_alert = alert_msg
+
         return alert_msg
 
     return None
 
 # =========================
-# DETECTION FUNCTION
+# DETECTION FUNCTION (FIXED)
 # =========================
 def detect(frame):
-    results = model.predict(frame, conf=0.3, verbose=False)
+    results = model.predict(frame, conf=CONF_THRESHOLD, verbose=False)
 
     annotated = results[0].plot()
 
@@ -166,7 +183,7 @@ if mode == "Live Camera":
         if alert:
             st.error(alert)
 
-        st.write("Detected:", list(set(classes)))
+        st.write("Detected Objects:", list(set(classes)))
 
 elif mode == "Upload Image":
     st.subheader("🖼️ AI Detection + Alert System")
