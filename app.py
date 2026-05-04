@@ -63,6 +63,87 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
+/* =========================
+   CONTROL ROOM UI PRO SIDEBAR
+========================= */
+
+/* Sidebar base glass effect */
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        rgba(10, 10, 10, 0.95),
+        rgba(20, 20, 20, 0.90)
+    );
+    backdrop-filter: blur(14px);
+    border-right: 1px solid rgba(255, 77, 166, 0.3);
+}
+
+/* Sidebar header */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #ff4da6 !important;
+    letter-spacing: 1px;
+}
+
+/* Control panel title glow */
+[data-testid="stSidebar"] h2 {
+    text-shadow: 0 0 10px rgba(255, 77, 166, 0.5);
+}
+
+/* Selectbox (mode selector) PRO LOOK */
+[data-testid="stSelectbox"] > div {
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 77, 166, 0.8);
+    border-radius: 12px;
+    padding: 6px;
+    transition: 0.2s ease-in-out;
+}
+
+/* Select text */
+[data-testid="stSelectbox"] * {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* Arrow visibility fix */
+[data-testid="stSelectbox"] svg {
+    fill: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Hover glow */
+[data-testid="stSelectbox"]:hover {
+    box-shadow: 0 0 15px rgba(255, 77, 166, 0.6);
+    border-color: #ff1a75;
+}
+
+/* Sidebar info / alerts box */
+[data-testid="stSidebar"] .stAlert {
+    border-radius: 10px;
+    background: rgba(255, 26, 117, 0.1);
+    border-left: 3px solid #ff4da6;
+}
+
+/* Divider styling */
+[data-testid="stSidebar"] hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ff4da6, transparent);
+    margin: 15px 0;
+}
+
+/* Sidebar text readability */
+[data-testid="stSidebar"] * {
+    color: #f5f5f5 !important;
+    font-weight: 500;
+}
+
+/* Smooth transition for UI */
+[data-testid="stSidebar"] * {
+    transition: all 0.2s ease-in-out;
+}
+
 # =========================
 # MODEL
 # =========================
