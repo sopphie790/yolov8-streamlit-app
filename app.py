@@ -1,46 +1,36 @@
 import streamlit as st
 from ultralytics import YOLO
-import cv2
 import numpy as np
 from PIL import Image
-import time
+import av
+import cv2
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
 
 # =========================
 # PAGE CONFIG
 # =========================
 st.set_page_config(
-    page_title="AI Vision Dashboard | Live Detection",
+    page_title="AI Vision SaaS Pro | Live Detection",
     page_icon="🎯",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =========================
-# CUSTOM CSS (PRO UI)
+# CUSTOM UI
 # =========================
 st.markdown("""
 <style>
-    .main {
-        background-color: #0e1117;
-    }
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+    .main { background-color: #0e1117; }
+    .block-container { padding-top: 2rem; }
     .dashboard-title {
         font-size: 28px;
         font-weight: 700;
-        color: #ffffff;
+        color: white;
     }
     .subtitle {
         color: #a0a0a0;
         font-size: 14px;
-    }
-    .metric-card {
-        background: rgba(255,255,255,0.05);
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -55,75 +45,72 @@ def load_model():
 model = load_model()
 
 # =========================
-# SIDEBAR UI
+# SIDEBAR
 # =========================
 with st.sidebar:
     st.title("⚙️ Control Panel")
-    mode = st.selectbox("Select Mode", ["Live Camera", "Image Upload"])
+    mode = st.selectbox("Select Mode", ["Live Camera (WebRTC)", "Image Upload"])
     conf = st.slider("Confidence Threshold", 0.1, 1.0, 0.5)
-    st.markdown("---")
-    st.info("AI-powered real-time object detection system")
+    st.info("AI SaaS Vision System")
 
 # =========================
 # HEADER
 # =========================
-st.markdown("<div class='dashboard-title'>🎯 Live Object Detection & Tracking Dashboard</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Professional AI Vision System powered by YOLOv8</div>", unsafe_allow_html=True)
+st.markdown("<div class='dashboard-title'>🎯 AI Vision SaaS Pro Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Real-time Object Detection powered by YOLOv8</div>", unsafe_allow_html=True)
 
 # =========================
-# METRICS ROW
-# =========================
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric("Model", "YOLOv8", "Active")
-with col2:
-    st.metric("Status", "Live Ready", "🟢")
-with col3:
-    st.metric("Mode", mode, "⚡")
-
-st.markdown("---")
-
-# =========================
-# DETECTION FUNCTIONS
+# DETECTION FUNCTION
 # =========================
 def detect_frame(frame):
     results = model.predict(frame, conf=conf)
     annotated = results[0].plot()
-    return annotated, len(results[0].boxes)
+    count = len(results[0].boxes)
+    return annotated, count
+
+# =========================
+# WEBRTC CONFIG
+# =========================
+RTC_CONFIGURATION = RTCConfiguration({
+    "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+})
+
+# =========================
+# VIDEO TRANSFORMER
+# =========================
+class YOLOTransformer(VideoTransformerBase):
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+
+        processed, count = detect_frame(img)
+
+        cv2.putText(
+            processed,
+            f"Objects: {count}",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
+        )
+
+        return av.VideoFrame.from_ndarray(processed, format="bgr24")
 
 # =========================
 # MAIN APP
 # =========================
-if mode == "Live Camera":
-    st.subheader("📷 Live Camera Feed")
+if mode == "Live Camera (WebRTC)":
+    st.subheader("📡 Live AI Detection (WebRTC Camera)")
 
-    run = st.checkbox("Start Camera")
-
-    if run:
-        cap = cv2.VideoCapture(0)
-
-        frame_placeholder = st.empty()
-        stat_placeholder = st.empty()
-
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                st.error("Camera not accessible")
-                break
-
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            processed, count = detect_frame(frame)
-
-            frame_placeholder.image(processed, channels="RGB")
-            stat_placeholder.markdown(f"### Detected Objects: {count}")
-
-            time.sleep(0.03)
-
-        cap.release()
+    webrtc_streamer(
+        key="ai-live",
+        video_transformer_factory=YOLOTransformer,
+        rtc_configuration=RTC_CONFIGURATION,
+        media_stream_constraints={"video": True, "audio": False}
+    )
 
 elif mode == "Image Upload":
-    st.subheader("🖼️ Upload Image")
+    st.subheader("🖼️ Image Detection")
 
     uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
@@ -137,6 +124,7 @@ elif mode == "Image Upload":
 
         with col1:
             st.image(image, caption="Original")
+
         with col2:
             st.image(processed, caption=f"Detected Objects: {count}")
 
@@ -144,4 +132,4 @@ elif mode == "Image Upload":
 # FOOTER
 # =========================
 st.markdown("---")
-st.markdown("<center style='color:gray'>Built with Streamlit + YOLOv8 | AI Vision Dashboard</center>", unsafe_allow_html=True)
+st.markdown("<center style='color:gray'>AI SaaS Pro Dashboard | YOLOv8 + WebRTC</center>", unsafe_allow_html=True)
