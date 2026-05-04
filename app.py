@@ -113,14 +113,23 @@ class YOLOTracker(VideoTransformerBase):
 # MAIN APP
 # =========================
 if mode == "Live Camera (WebRTC)":
-    st.subheader("📡 Live Multi-Object Tracking")
+    st.subheader("📷 Live Detection (Stable Mode)")
 
-    webrtc_streamer(
-        key="yolo-tracking",
-        video_transformer_factory=YOLOTracker,
-        rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={"video": True, "audio": False}
-    )
+    img_file = st.camera_input("Capture Frame")
+
+    if img_file:
+        image = Image.open(img_file)
+        image = np.array(image)
+
+        processed, count = detect_frame(image)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.image(image, caption="Original")
+
+        with col2:
+            st.image(processed, caption=f"Detected Objects: {count}")
 
 elif mode == "Image Upload":
     st.subheader("🖼️ Object Tracking (Image)")
