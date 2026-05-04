@@ -33,6 +33,48 @@ st.markdown("""
         rgba(255, 26, 117, 0.65)
     );
     backdrop-filter: blur(14px);
+    position: relative; /* IMPORTANT for glitter */
+    overflow: hidden;
+}
+
+/* ✨ GOLD GLITTER STARS (SAFE VERSION) */
+[data-testid="stSidebar"]::before {
+    content: "✨ ✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    position: absolute;
+    bottom: -50px;
+    left: 10px;
+    font-size: 14px;
+    color: gold;
+    opacity: 0.8;
+    animation: floatStars 10s linear infinite;
+    pointer-events: none;
+}
+
+[data-testid="stSidebar"]::after {
+    content: "✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    position: absolute;
+    bottom: -50px;
+    right: 10px;
+    font-size: 12px;
+    color: #ffd700;
+    opacity: 0.6;
+    animation: floatStars 14s linear infinite;
+    pointer-events: none;
+}
+
+/* ANIMATION */
+@keyframes floatStars {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-600px);
+        opacity: 0;
+    }
 }
 
 /* SIDEBAR TEXT */
@@ -57,6 +99,7 @@ st.markdown("""
     transform: scale(1.03);
 }
 
+/* TITLES */
 h1, h2, h3 {
     color: white;
 }
@@ -180,7 +223,7 @@ with st.sidebar:
         st.info("No alerts yet")
         st.markdown("---")
         st.markdown("### 👩‍💻 Developer")
-        st.markdown("**Liza S. Jaime**")
+        st.markdown("Liza S. Jaime")
         st.markdown("BSCS - 3A")
 
 # =========================
