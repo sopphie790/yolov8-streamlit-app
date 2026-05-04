@@ -1,98 +1,147 @@
 import streamlit as st
+from ultralytics import YOLO
 import cv2
 import numpy as np
-from ultralytics import YOLO
+from PIL import Image
+import time
 
 # =========================
 # PAGE CONFIG
 # =========================
 st.set_page_config(
-    page_title="AI Vision Dashboard",
+    page_title="AI Vision Dashboard | Live Detection",
+    page_icon="🎯",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =========================
-# LOAD YOLO MODEL (SAFE)
-# =========================
-@st.cache_resource
-def load_model():
-    from ultralytics import YOLO
-
-    # IMPORTANT: force re-download safe weights
-    model = YOLO("yolov8n.pt", task="detect")
-    return model
-
-# =========================
-# UI DESIGN
+# CUSTOM CSS (PRO UI)
 # =========================
 st.markdown("""
-<h1 style='color:#38bdf8;'>🧠 AI Vision Dashboard</h1>
-<p style='color:#aaa;'>YOLOv8 Object Detection (Streamlit Cloud Stable Version)</p>
-<hr>
+<style>
+    .main {
+        background-color: #0e1117;
+    }
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .dashboard-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .subtitle {
+        color: #a0a0a0;
+        font-size: 14px;
+    }
+    .metric-card {
+        background: rgba(255,255,255,0.05);
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+    }
+</style>
 """, unsafe_allow_html=True)
 
 # =========================
-# SIDEBAR
+# LOAD MODEL
+# =========================
+@st.cache_resource
+def load_model():
+    return YOLO("yolov8n.pt")
+
+model = load_model()
+
+# =========================
+# SIDEBAR UI
 # =========================
 with st.sidebar:
     st.title("⚙️ Control Panel")
-
-    st.info("This version uses image upload (stable for deployment)")
-
-    st.write("Model: YOLOv8n")
-    st.write("Status: Ready 🚀")
+    mode = st.selectbox("Select Mode", ["Live Camera", "Image Upload"])
+    conf = st.slider("Confidence Threshold", 0.1, 1.0, 0.5)
+    st.markdown("---")
+    st.info("AI-powered real-time object detection system")
 
 # =========================
-# DASHBOARD CARDS
+# HEADER
+# =========================
+st.markdown("<div class='dashboard-title'>🎯 Live Object Detection & Tracking Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Professional AI Vision System powered by YOLOv8</div>", unsafe_allow_html=True)
+
+# =========================
+# METRICS ROW
 # =========================
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("AI Model", "YOLOv8")
-
+    st.metric("Model", "YOLOv8", "Active")
 with col2:
-    st.metric("Mode", "Image Detection")
-
+    st.metric("Status", "Live Ready", "🟢")
 with col3:
-    st.metric("Platform", "Streamlit Cloud")
+    st.metric("Mode", mode, "⚡")
 
-st.write("---")
+st.markdown("---")
 
 # =========================
-# IMAGE DETECTION (SAFE REPLACEMENT FOR WEBCAM)
+# DETECTION FUNCTIONS
 # =========================
-st.subheader("📷 Upload Image for Detection")
+def detect_frame(frame):
+    results = model.predict(frame, conf=conf)
+    annotated = results[0].plot()
+    return annotated, len(results[0].boxes)
 
-uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+# =========================
+# MAIN APP
+# =========================
+if mode == "Live Camera":
+    st.subheader("📷 Live Camera Feed")
 
-if uploaded_file is not None:
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    run = st.checkbox("Start Camera")
 
-    results = model.predict(img, verbose=False)
+    if run:
+        cap = cv2.VideoCapture(0)
 
-    for r in results:
-        for box in r.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            conf = float(box.conf[0])
-            cls = int(box.cls[0])
+        frame_placeholder = st.empty()
+        stat_placeholder = st.empty()
 
-            label = f"{model.names[cls]} {conf:.2f}"
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                st.error("Camera not accessible")
+                break
 
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(
-                img,
-                label,
-                (x1, y1 - 10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 255, 0),
-                2
-            )
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            processed, count = detect_frame(frame)
 
-    st.image(img, channels="BGR")
+            frame_placeholder.image(processed, channels="RGB")
+            stat_placeholder.markdown(f"### Detected Objects: {count}")
 
-st.write("---")
+            time.sleep(0.03)
 
-st.caption("Developed by Liza Jaime | AI Vision System")
+        cap.release()
+
+elif mode == "Image Upload":
+    st.subheader("🖼️ Upload Image")
+
+    uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+
+    if uploaded:
+        image = Image.open(uploaded)
+        image = np.array(image)
+
+        processed, count = detect_frame(image)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.image(image, caption="Original")
+        with col2:
+            st.image(processed, caption=f"Detected Objects: {count}")
+
+# =========================
+# FOOTER
+# =========================
+st.markdown("---")
+st.markdown("<center style='color:gray'>Built with Streamlit + YOLOv8 | AI Vision Dashboard</center>", unsafe_allow_html=True)
