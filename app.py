@@ -176,7 +176,7 @@ if mode == "Live Camera":
         image = Image.open(img_file).convert("RGB")
         image = np.array(image)
 
-        processed, count, classes, alert = detect(image)
+        processed, count, classes, alert, class_count = detect(image)
 
         col1, col2, col3 = st.columns(3)
 
