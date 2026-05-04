@@ -216,6 +216,7 @@ if mode == "Live Camera":
 
 elif mode == "Upload Image":
     st.subheader("🖼️ AI Detection + Alert System")
+    st.write("Upload an image to analyze it for object detection and alerts.")
 
     uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
