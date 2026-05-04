@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # =========================
-# UI DESIGN FIXED
+# 🔥 CONTROL ROOM UI PRO (UPGRADE ONLY)
 # =========================
 st.markdown("""
 <style>
@@ -25,49 +25,7 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* SIDEBAR */
-[data-testid="stSidebar"] {
-    background: linear-gradient(
-        180deg,
-        rgba(255, 77, 166, 0.65),
-        rgba(255, 26, 117, 0.65)
-    );
-    backdrop-filter: blur(14px);
-}
-
-/* SIDEBAR TEXT */
-[data-testid="stSidebar"] * {
-    color: white !important;
-    font-weight: 600;
-}
-
-/* BUTTON */
-.stButton>button {
-    background: linear-gradient(90deg, #ff4da6, #ff1a75);
-    color: white;
-    border-radius: 12px;
-    border: none;
-    padding: 0.6em 1em;
-    font-weight: bold;
-    width: 100%;
-}
-
-.stButton>button:hover {
-    color: black !important;
-    transform: scale(1.03);
-}
-
-h1, h2, h3 {
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-/* =========================
-   CONTROL ROOM UI PRO SIDEBAR
-========================= */
-
-/* Sidebar base glass effect */
+/* ================= SIDEBAR CONTROL ROOM ================= */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
@@ -78,71 +36,68 @@ h1, h2, h3 {
     border-right: 1px solid rgba(255, 77, 166, 0.3);
 }
 
-/* Sidebar header */
+/* Sidebar text glow */
+[data-testid="stSidebar"] * {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* Sidebar header glow */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
     color: #ff4da6 !important;
-    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255, 77, 166, 0.4);
 }
 
-/* Control panel title glow */
-[data-testid="stSidebar"] h2 {
-    text-shadow: 0 0 10px rgba(255, 77, 166, 0.5);
-}
-
-/* Selectbox (mode selector) PRO LOOK */
+/* ================= SELECT BOX (FIX ARROW + PRO LOOK) ================= */
 [data-testid="stSelectbox"] > div {
     background: rgba(255, 255, 255, 0.06);
     border: 2px solid rgba(255, 77, 166, 0.8);
     border-radius: 12px;
     padding: 6px;
-    transition: 0.2s ease-in-out;
 }
 
-/* Select text */
 [data-testid="stSelectbox"] * {
     color: white !important;
     font-weight: 600;
 }
 
-/* Arrow visibility fix */
+/* FORCE ARROW VISIBILITY */
 [data-testid="stSelectbox"] svg {
-    fill: #ffffff !important;
+    fill: white !important;
     opacity: 1 !important;
 }
 
 /* Hover glow */
 [data-testid="stSelectbox"]:hover {
     box-shadow: 0 0 15px rgba(255, 77, 166, 0.6);
-    border-color: #ff1a75;
 }
 
-/* Sidebar info / alerts box */
-[data-testid="stSidebar"] .stAlert {
-    border-radius: 10px;
-    background: rgba(255, 26, 117, 0.1);
-    border-left: 3px solid #ff4da6;
-}
-
-/* Divider styling */
-[data-testid="stSidebar"] hr {
+/* ================= BUTTON ================= */
+.stButton>button {
+    background: linear-gradient(90deg, #ff4da6, #ff1a75);
+    color: white;
+    border-radius: 12px;
     border: none;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #ff4da6, transparent);
-    margin: 15px 0;
+    padding: 0.6em 1em;
+    font-weight: bold;
+    width: 100%;
+    transition: 0.2s;
 }
 
-/* Sidebar text readability */
-[data-testid="stSidebar"] * {
-    color: #f5f5f5 !important;
-    font-weight: 500;
+.stButton>button:hover {
+    color: black !important;
+    transform: scale(1.03);
+    box-shadow: 0 0 12px rgba(255, 77, 166, 0.4);
 }
 
-/* Smooth transition for UI */
-[data-testid="stSidebar"] * {
-    transition: all 0.2s ease-in-out;
+/* TITLES */
+h1, h2, h3 {
+    color: white;
 }
+</style>
+""", unsafe_allow_html=True)
 
 # =========================
 # MODEL
@@ -213,7 +168,7 @@ def detect(frame):
     return annotated, total_count, classes, alert, class_count
 
 # =========================
-# 🔥 AI ANALYTICS DASHBOARD
+# ANALYTICS DASHBOARD
 # =========================
 def render_analytics(class_count):
     if not class_count:
@@ -246,13 +201,13 @@ def render_analytics(class_count):
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.header("⚙️ Control Panel")
+    st.header("⚙️ CONTROL ROOM")
 
     mode = st.selectbox("Select Mode", ["Live Camera", "Upload Image"])
 
     st.markdown("---")
 
-    st.subheader("🚨 AI Alerts")
+    st.subheader("🚨 AI ALERTS")
 
     if st.session_state.alerts:
         for a in reversed(st.session_state.alerts[-5:]):
