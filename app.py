@@ -37,61 +37,47 @@ st.markdown("""
     overflow: hidden;
 }
 
-st.markdown("""
-<style>
-.main {
-    background-color: #0e1117;
-}
-
-/* SIDEBAR */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, rgba(255, 77, 166, 0.65), rgba(255, 26, 117, 0.65));
-    backdrop-filter: blur(14px);
-    position: relative;
-    overflow: hidden;
-}
-
-/* ✨ PARTICLES */
+/* ✨ GOLD GLITTER STARS (SAFE VERSION) */
 [data-testid="stSidebar"]::before {
-    content: "";
+    content: "✨ ✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
     position: absolute;
-    width: 200%;
-    height: 200%;
-    top: -50%;
-    left: -50%;
-    background-image: radial-gradient(circle, rgba(255,215,0,0.9) 1px, transparent 1px);
-    background-size: 30px 30px;
-    animation: sparkleMove 12s linear infinite;
-    opacity: 0.3;
+    bottom: -50px;
+    left: 10px;
+    font-size: 14px;
+    color: gold;
+    opacity: 0.8;
+    animation: floatStars 10s linear infinite;
     pointer-events: none;
 }
 
-/* ✨ FLOATING SPARKLES */
 [data-testid="stSidebar"]::after {
-    content: "✦ ✨ ✦ ✨ ✦";
+    content: "✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
     position: absolute;
-    bottom: -40px;
-    left: 20%;
-    font-size: 16px;
-    color: gold;
-    text-shadow: 0 0 10px gold;
-    animation: floatGlow 9s linear infinite;
+    bottom: -50px;
+    right: 10px;
+    font-size: 12px;
+    color: #ffd700;
+    opacity: 0.6;
+    animation: floatStars 14s linear infinite;
     pointer-events: none;
 }
 
 /* ANIMATION */
-@keyframes sparkleMove {
-    0% { transform: translate(0,0); }
-    100% { transform: translate(200px,200px); }
+@keyframes floatStars {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-600px);
+        opacity: 0;
+    }
 }
 
-@keyframes floatGlow {
-    0% { transform: translateY(0); opacity: 0; }
-    20% { opacity: 1; }
-    100% { transform: translateY(-600px); opacity: 0; }
-}
-
-/* TEXT */
+/* SIDEBAR TEXT */
 [data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 600;
