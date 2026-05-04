@@ -3,8 +3,3 @@ ultralytics==8.0.196
 opencv-python-headless
 numpy
 pillow
-
-# REMOVE aiortc pinning conflict
-aiortc>=1.9.0
-
-streamlit-webrtc==0.47.9
