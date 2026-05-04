@@ -25,7 +25,7 @@ st.markdown("""
     background-color: #0e1117;
 }
 
-/* SIDEBAR */
+/* SIDEBAR BASE */
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
@@ -33,47 +33,69 @@ st.markdown("""
         rgba(255, 26, 117, 0.65)
     );
     backdrop-filter: blur(14px);
-    position: relative; /* IMPORTANT for glitter */
+    position: relative;
     overflow: hidden;
 }
 
-/* ✨ GOLD GLITTER STARS (SAFE VERSION) */
+/* ✨ MASSIVE MICRO GLITTER FIELD */
 [data-testid="stSidebar"]::before {
-    content: "✨ ✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    content: "";
     position: absolute;
-    bottom: -50px;
-    left: 10px;
-    font-size: 14px;
-    color: gold;
-    opacity: 0.8;
-    animation: floatStars 10s linear infinite;
+    width: 300%;
+    height: 300%;
+    top: -100%;
+    left: -100%;
+
+    background-image:
+        radial-gradient(circle, rgba(255,215,0,0.9) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px);
+
+    background-size: 14px 14px, 22px 22px, 30px 30px;
+
+    animation: glitterFlow 16s linear infinite;
+
+    opacity: 0.5;
     pointer-events: none;
 }
 
+/* ✨ SECOND TWINKLE LAYER */
 [data-testid="stSidebar"]::after {
-    content: "✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    content: "";
     position: absolute;
-    bottom: -50px;
-    right: 10px;
-    font-size: 12px;
-    color: #ffd700;
-    opacity: 0.6;
-    animation: floatStars 14s linear infinite;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+
+    background-image: radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 2px);
+    background-size: 18px 18px;
+
+    animation: twinkle 5s ease-in-out infinite alternate;
+
+    opacity: 0.25;
     pointer-events: none;
 }
 
-/* ANIMATION */
-@keyframes floatStars {
+/* MOVING GLITTER */
+@keyframes glitterFlow {
     0% {
-        transform: translateY(0);
-        opacity: 0;
-    }
-    20% {
-        opacity: 1;
+        transform: translate(0, 0);
     }
     100% {
-        transform: translateY(-600px);
-        opacity: 0;
+        transform: translate(220px, -220px);
+    }
+}
+
+/* TWINKLE EFFECT */
+@keyframes twinkle {
+    0% {
+        opacity: 0.1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.6;
+        transform: scale(1.2);
     }
 }
 
