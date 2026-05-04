@@ -45,17 +45,13 @@ st.markdown("""
 
 /* SIDEBAR */
 [data-testid="stSidebar"] {
-    background: linear-gradient(
-        180deg,
-        rgba(255, 77, 166, 0.65),
-        rgba(255, 26, 117, 0.65)
-    );
+    background: linear-gradient(180deg, rgba(255, 77, 166, 0.65), rgba(255, 26, 117, 0.65));
     backdrop-filter: blur(14px);
     position: relative;
     overflow: hidden;
 }
 
-/* ✨ PRO GLOWING PARTICLES BACKGROUND */
+/* ✨ PARTICLES */
 [data-testid="stSidebar"]::before {
     content: "";
     position: absolute;
@@ -63,60 +59,39 @@ st.markdown("""
     height: 200%;
     top: -50%;
     left: -50%;
-
-    background-image:
-        radial-gradient(circle, rgba(255,215,0,0.9) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
-
-    background-size: 30px 30px, 60px 60px;
-
+    background-image: radial-gradient(circle, rgba(255,215,0,0.9) 1px, transparent 1px);
+    background-size: 30px 30px;
     animation: sparkleMove 12s linear infinite;
-
-    opacity: 0.35;
+    opacity: 0.3;
     pointer-events: none;
 }
 
-/* ✨ FLOATING GLOW SPARKLES */
+/* ✨ FLOATING SPARKLES */
 [data-testid="stSidebar"]::after {
     content: "✦ ✨ ✦ ✨ ✦";
     position: absolute;
     bottom: -40px;
-    left: 15%;
+    left: 20%;
     font-size: 16px;
     color: gold;
-
-    text-shadow: 0 0 10px rgba(255,215,0,0.9);
-
+    text-shadow: 0 0 10px gold;
     animation: floatGlow 9s linear infinite;
-
     pointer-events: none;
 }
 
-/* ANIMATIONS */
+/* ANIMATION */
 @keyframes sparkleMove {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(200px, 200px); }
+    0% { transform: translate(0,0); }
+    100% { transform: translate(200px,200px); }
 }
 
 @keyframes floatGlow {
-    0% {
-        transform: translateY(0) scale(0.8);
-        opacity: 0;
-    }
-    20% {
-        opacity: 1;
-    }
-    50% {
-        transform: translateY(-300px) scale(1.2);
-        opacity: 0.9;
-    }
-    100% {
-        transform: translateY(-600px) scale(0.6);
-        opacity: 0;
-    }
+    0% { transform: translateY(0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(-600px); opacity: 0; }
 }
 
-/* SIDEBAR TEXT */
+/* TEXT */
 [data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 600;
@@ -131,7 +106,6 @@ st.markdown("""
     padding: 0.6em 1em;
     font-weight: bold;
     width: 100%;
-    transition: 0.3s;
 }
 
 .stButton>button:hover {
