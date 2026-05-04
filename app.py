@@ -184,7 +184,8 @@ with st.sidebar:
 # =========================
 
 if mode == "Live Camera":
-    st.subheader("📷 Live AI Detection + Alerts")
+    st.subheader("🎥 Live Object Detection & Tracing")
+    st.write("Point your camera at objects to identify them in real-time.")
 
     img_file = st.camera_input("Open Camera")
 
