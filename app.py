@@ -6,10 +6,10 @@ import cv2
 import time
 
 # =========================
-# PAGE CONFIG
+# PAGE CONFIG (MUST BE FIRST)
 # =========================
 st.set_page_config(
-    page_title="AI Object Detection Pro",
+    page_title="🎥 Live Object Detection & Tracing",
     page_icon="📸",
     layout="wide"
 )
@@ -20,11 +20,11 @@ st.set_page_config(
 def preprocess_image(image):
     img = np.array(image)
 
-    # Fix RGBA issue (VERY IMPORTANT)
-    if img.shape[-1] == 4:
+    # Ensure correct format (fix RGBA issue)
+    if img.ndim == 3 and img.shape[-1] == 4:
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
-    # Convert RGB → BGR for YOLO stability
+    # Convert RGB → BGR for YOLO
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     return img
@@ -63,7 +63,7 @@ with st.sidebar:
 st.markdown(
     """
     <h1 style='text-align: center; color: #4CAF50;'>
-    📸 AI Object Detection Pro
+    🎥 Live Object Detection & Tracing
     </h1>
     <p style='text-align: center;'>
     Stable YOLOv8 Deployment App (One File Version)
@@ -87,7 +87,9 @@ if app_mode == "📷 Camera Detection":
         image = Image.open(img_file).convert("RGB")
         img = preprocess_image(image)
 
+        # SAFE PREDICTION (more stable than model(img))
         results = model.predict(img, conf=conf_threshold)
+
         annotated = results[0].plot()
 
         st.image(annotated, caption="Detected Objects", use_container_width=True)
@@ -124,7 +126,9 @@ elif app_mode == "🖼️ Image Upload":
         image = Image.open(uploaded_file).convert("RGB")
         img = preprocess_image(image)
 
+        # SAFE PREDICTION
         results = model.predict(img, conf=conf_threshold)
+
         annotated = results[0].plot()
 
         st.image(annotated, caption="Detected Objects", use_container_width=True)
