@@ -5,6 +5,8 @@ from PIL import Image
 import av
 import cv2
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
+import torch
+torch.serialization.add_safe_globals([])
 
 # =========================
 # PAGE CONFIG
@@ -33,9 +35,8 @@ st.markdown("""
 # =========================
 @st.cache_resource
 def load_model():
-    return YOLO("yolov8s.pt")
-
-model = load_model()
+    model = YOLO("yolov8n.pt")  # use nano first for stability
+    return model
 
 # =========================
 # SIDEBAR
