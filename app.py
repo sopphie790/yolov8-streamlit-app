@@ -15,7 +15,32 @@ st.set_page_config(
     page_icon="🚨",
     layout="wide"
 )
-
+# =========================
+# 👤 PROFILE FRAME CARD
+# =========================
+st.markdown("""
+<div style="
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0px 0px 15px rgba(255, 77, 166, 0.4);
+    margin-bottom: 15px;
+">
+    <img src="https://i.imgur.com/8Km9tLL.png"
+         style="
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #ff4da6;
+            object-fit: cover;
+            margin-bottom: 10px;
+        ">
+    <h4 style="color:white; margin-bottom:5px;">👩‍💻 Developer</h4>
+    <p style="color:#ffd1e8; margin:0;">Liza S. Jaime</p>
+    <p style="color:#ffffffaa; font-size:12px;">BSCS - 3A</p>
+</div>
+""", unsafe_allow_html=True)
 # =========================
 # UI DESIGN FIXED
 # =========================
