@@ -72,7 +72,7 @@ def load_model():
 
 model = load_model()
 
-CONF_THRESHOLD = 0.2
+CONF_THRESHOLD = 0.15
 
 # =========================
 # ALERT SYSTEM
