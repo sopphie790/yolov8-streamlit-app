@@ -124,17 +124,26 @@ def detect(frame):
     annotated = results[0].plot()
 
     boxes = results[0].boxes
-    count = len(boxes) if boxes is not None else 0
 
     classes = []
+    class_count = {}
 
     if boxes is not None:
         for c in boxes.cls:
-            classes.append(model.names[int(c)])
+            name = model.names[int(c)]
+            classes.append(name)
+
+            # accurate per-class counting
+            if name in class_count:
+                class_count[name] += 1
+            else:
+                class_count[name] = 1
 
     alert = check_alerts(classes)
 
-    return annotated, count, classes, alert
+    total_count = sum(class_count.values())
+
+    return annotated, total_count, classes, alert, class_count
 
 # =========================
 # SIDEBAR
