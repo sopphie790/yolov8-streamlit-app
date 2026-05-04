@@ -37,42 +37,81 @@ st.markdown("""
     overflow: hidden;
 }
 
-/* ✨ GOLD GLITTER STARS (SAFE VERSION) */
+st.markdown("""
+<style>
+.main {
+    background-color: #0e1117;
+}
+
+/* SIDEBAR */
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 77, 166, 0.65),
+        rgba(255, 26, 117, 0.65)
+    );
+    backdrop-filter: blur(14px);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ✨ PRO GLOWING PARTICLES BACKGROUND */
 [data-testid="stSidebar"]::before {
-    content: "✨ ✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    content: "";
     position: absolute;
-    bottom: -50px;
-    left: 10px;
-    font-size: 14px;
-    color: gold;
-    opacity: 0.8;
-    animation: floatStars 10s linear infinite;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+
+    background-image:
+        radial-gradient(circle, rgba(255,215,0,0.9) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
+
+    background-size: 30px 30px, 60px 60px;
+
+    animation: sparkleMove 12s linear infinite;
+
+    opacity: 0.35;
     pointer-events: none;
 }
 
+/* ✨ FLOATING GLOW SPARKLES */
 [data-testid="stSidebar"]::after {
-    content: "✦ ✨ ✦ ✨ ✦ ✨ ✦ ✨";
+    content: "✦ ✨ ✦ ✨ ✦";
     position: absolute;
-    bottom: -50px;
-    right: 10px;
-    font-size: 12px;
-    color: #ffd700;
-    opacity: 0.6;
-    animation: floatStars 14s linear infinite;
+    bottom: -40px;
+    left: 15%;
+    font-size: 16px;
+    color: gold;
+
+    text-shadow: 0 0 10px rgba(255,215,0,0.9);
+
+    animation: floatGlow 9s linear infinite;
+
     pointer-events: none;
 }
 
-/* ANIMATION */
-@keyframes floatStars {
+/* ANIMATIONS */
+@keyframes sparkleMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(200px, 200px); }
+}
+
+@keyframes floatGlow {
     0% {
-        transform: translateY(0);
+        transform: translateY(0) scale(0.8);
         opacity: 0;
     }
     20% {
         opacity: 1;
     }
+    50% {
+        transform: translateY(-300px) scale(1.2);
+        opacity: 0.9;
+    }
     100% {
-        transform: translateY(-600px);
+        transform: translateY(-600px) scale(0.6);
         opacity: 0;
     }
 }
@@ -92,6 +131,7 @@ st.markdown("""
     padding: 0.6em 1em;
     font-weight: bold;
     width: 100%;
+    transition: 0.3s;
 }
 
 .stButton>button:hover {
