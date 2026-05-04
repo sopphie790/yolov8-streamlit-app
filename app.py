@@ -100,14 +100,23 @@ class YOLOTransformer(VideoTransformerBase):
 # MAIN APP
 # =========================
 if mode == "Live Camera (WebRTC)":
-    st.subheader("📡 Live AI Detection (WebRTC Camera)")
+    st.subheader("📷 Live Camera (Stable Mode)")
 
-    webrtc_streamer(
-        key="ai-live",
-        video_transformer_factory=YOLOTransformer,
-        rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={"video": True, "audio": False}
-    )
+    img_file = st.camera_input("Capture Frame")
+
+    if img_file:
+        image = Image.open(img_file)
+        image = np.array(image)
+
+        processed, count = detect_frame(image)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.image(image, caption="Original")
+
+        with col2:
+            st.image(processed, caption=f"Detected Objects: {count}")
 
 elif mode == "Image Upload":
     st.subheader("🖼️ Image Detection")
