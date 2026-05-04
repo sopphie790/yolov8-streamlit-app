@@ -4,6 +4,7 @@ import numpy as np
 from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import av
+import torch
 
 # =========================
 # PAGE CONFIG
@@ -15,16 +16,19 @@ st.set_page_config(
 )
 
 # =========================
-# LOAD YOLO MODEL (cached)
+# LOAD YOLO MODEL (cached + FIXED)
 # =========================
 @st.cache_resource
 def load_model():
-    return YOLO("yolov8n.pt")  # lightweight model for cloud
+    # FIX: avoid pickle / unsafe loading issues in cloud
+    model = YOLO("yolov8n.pt")
+    model.fuse()  # stabilize inference (important fix)
+    return model
 
 model = load_model()
 
 # =========================
-# SAFE STUN CONFIG (IMPORTANT FOR STREAMLIT CLOUD CAMERA)
+# SAFE STUN CONFIG
 # =========================
 RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
@@ -37,7 +41,7 @@ class YOLOProcessor(VideoProcessorBase):
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
 
-        results = model(img, verbose=False)
+        results = model.predict(img, verbose=False)
 
         for r in results:
             boxes = r.boxes
@@ -48,10 +52,16 @@ class YOLOProcessor(VideoProcessorBase):
 
                 label = f"{model.names[cls]} {conf:.2f}"
 
-                cv2.rectangle(img, (x1, y1), (x2, y2), (0,255,0), 2)
-                cv2.putText(img, label, (x1, y1-10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            (0,255,0), 2)
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(
+                    img,
+                    label,
+                    (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 255, 0),
+                    2
+                )
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
