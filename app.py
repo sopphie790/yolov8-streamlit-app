@@ -1,102 +1,44 @@
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer
 from ultralytics import YOLO
+import av
 import cv2
-import numpy as np
-from PIL import Image
-import tempfile
 
-# =========================
-# Load YOLOv8 Model (cached)
-# =========================
+# Cache the model so it doesn't reload every rerun
 @st.cache_resource
 def load_model():
-    return YOLO("./yolov8n.pt")
+    return YOLO("yolov8n.pt")
 
 model = load_model()
 
-# =========================
-# UI
-# =========================
-st.title("🧠 AI Object Detection (Stable Version)")
-st.write("Upload an image or video for object detection using YOLOv8.")
-st.info("Stable version: No webcam, no crash during deployment.")
+st.title("🎥 Live Object Detection & Tracing")
+st.write("Point your camera at objects to identify them in real-time.")
 
-# =========================
-# Allowed Classes
-# =========================
-allowed_classes = [0, 25, 13, 39, 41, 63, 67]
+# Video frame callback
+def video_frame_callback(frame):
+    img = frame.to_ndarray(format="bgr24")
 
-# =========================
-# IMAGE UPLOAD
-# =========================
-st.subheader("📸 Image Detection")
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    # Run YOLOv8 tracking
+    results = model.track(
+        img,
+        persist=True,
+        conf=0.5,
+        verbose=False
+    )
 
-if uploaded_image:
-    image = Image.open(uploaded_image)
-    img = np.array(image)
+    # Annotate frame
+    annotated_frame = results[0].plot()
 
-    results = model(img, conf=0.5)
+    return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
 
-    annotated = results[0].plot()
 
-    # COUNT OBJECTS
-    counts = {}
-    if results[0].boxes is not None:
-        for box in results[0].boxes:
-            cls = int(box.cls[0])
-            if cls in allowed_classes:
-                name = model.names[cls]
-                counts[name] = counts.get(name, 0) + 1
-
-    # DISPLAY COUNTS
-    for obj, count in counts.items():
-        cv2.putText(
-            annotated,
-            f"{obj.upper()}: {count}",
-            (15, 30 + list(counts.keys()).index(obj)*30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (0, 255, 0),
-            2
-        )
-
-    # ALERT
-    if "person" in counts:
-        cv2.putText(
-            annotated,
-            "ALERT: Person Detected!",
-            (15, 200),
-            cv2.FONT_HERSHEY_DUPLEX,
-            1,
-            (0, 0, 255),
-            2
-        )
-
-    st.image(annotated, channels="BGR")
-
-# =========================
-# VIDEO UPLOAD (OPTIONAL)
-# =========================
-st.subheader("🎥 Video Detection (Optional)")
-uploaded_video = st.file_uploader("Upload a video", type=["mp4", "mov", "avi"])
-
-if uploaded_video:
-    tfile = tempfile.NamedTemporaryFile(delete=False)
-    tfile.write(uploaded_video.read())
-
-    cap = cv2.VideoCapture(tfile.name)
-
-    stframe = st.empty()
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        results = model(frame, conf=0.5)
-        annotated = results[0].plot()
-
-        stframe.image(annotated, channels="BGR")
-
-    cap.release()
+# Start WebRTC streamer
+webrtc_streamer(
+    key="object-detection",
+    video_frame_callback=video_frame_callback,
+    async_processing=True,  # smoother performance
+    rtc_configuration={
+        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+    },
+    media_stream_constraints={"video": True, "audio": False},
+)
