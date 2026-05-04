@@ -159,8 +159,8 @@ def render_analytics(class_count):
     ax.pie(
         df["Count"],
         labels=df["Object"],
-        autopct='%1.1f%%',
-        startangle=90
+        autopct='%1.0f%%',
+        startangle=75
     )
 
     ax.set_title("Object Distribution")
